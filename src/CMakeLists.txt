@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(BankSystem)
-set(SOURCE ${PROJECT_SOURCE_DIR}/Account/Account.cpp
-		   ${PROJECT_SOURCE_DIR}/Bank/Bank.cpp
-		   ${PROJECT_SOURCE_DIR}/Client/Client.cpp
-		   ${PROJECT_SOURCE_DIR}/Interface/Interface.cpp)
+file(GLOB_RECURSE SOURCE
+    "${CMAKE_CURRENT_SOURCE_DIR}/Account/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/Bank/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/Client/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/Interface/*.cpp"
+)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 

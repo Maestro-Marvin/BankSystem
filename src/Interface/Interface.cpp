@@ -1,59 +1,97 @@
 #include "Interface.hpp"
 
-std::pair<std::vector<User>, int> Interface::RestoreInformation(
-    std::string user, std::string password) {
+bool Interface::DataStorage::find_user(std::string user, std::string password) {
+  std::ifstream file;
+  file.open("../src/Interface/info.txt");
+  std::string line;
+  while (std::getline(file, line)) {
+    if (line == user) {
+      if (std::getline(file, line) && line == password) {
+        file.close();
+        return true;
+      }
+    }
+  }
+  file.close();
+  return false;
+}
+
+Client* Interface::DataStorage::restore_client(std::ifstream& file) {
+  std::string first_name;
+  std::getline(file, first_name);
+  std::string second_name;
+  std::getline(file, second_name);
+  std::string adress;
+  std::getline(file, adress);
+  std::string passport;
+  std::getline(file, passport);
+  return new Client(first_name, second_name, adress, passport);
+}
+
+void Interface::DataStorage::restore_accounts(std::ifstream& file,
+                                              std::map<int, Bank>& banks,
+                                              Client* client) {
+  std::string line;
+  while (file >> line && line != "###") {
+    int bank_id = std::stoi(line);
+    Bank& bank = banks[bank_id];
+    int account_id;
+    file >> account_id;
+    std::string type;
+    file >> type;
+    int sum;
+    file >> sum;
+    bank.open_account(client, type, account_id, true);
+    if (type == "Deposit") {
+      int period;
+      file >> period;
+      bank.set_period(account_id, period);
+    }
+    bank.refill(account_id, sum);
+  }
+}
+
+std::pair<std::vector<User>, int> Interface::DataStorage::restore_information(
+    std::map<int, Bank>& banks, std::string user, std::string password,
+    std::string mode) {
+  if (mode == "sign in" && !find_user(user, password)) {
+    return std::make_pair(std::vector<User>(), -1);
+  }
   std::ifstream file;
   file.open("../src/Interface/info.txt");
   std::vector<User> ans;
   int idx = -1;
   std::string line;
   while (std::getline(file, line) && !line.empty()) {
-    std::string us, pas;
-    us = line;
+    std::string userr;
+    std::string passwordd;
+    userr = line;
     std::getline(file, line);
-    pas = line;
-    std::string first_name;
-    std::getline(file, first_name);
-    std::string second_name;
-    std::getline(file, second_name);
-    std::string adress;
-    std::getline(file, adress);
-    std::string passport;
-    std::getline(file, passport);
-    Client* client = new Client(first_name, second_name, adress, passport);
-    while (file >> line && line != "###") {
-      int bank_id = std::stoi(line);
-      Bank& bank = banks_[bank_id];
-      int account_id;
-      file >> account_id;
-      std::string type;
-      file >> type;
-      int sum;
-      file >> sum;
-      bank.OpenAccount(client, type, account_id, false);
-      bank.Refill(account_id, sum);
-    }
-    if (us == user && pas == password) {
+    passwordd = line;
+    Client* client = restore_client(file);
+    restore_accounts(file, banks, client);
+    if (userr == user && passwordd == password) {
       idx = ans.size();
     }
-    ans.push_back({us, pas, client});
+    ans.push_back({userr, passwordd, client});
     std::getline(file, line);
   }
   file.close();
   return std::make_pair(ans, idx);
 }
 
-void Interface::SaveInformation(std::vector<User> users) {
+void Interface::DataStorage::save_information(std::map<int, Bank>& banks,
+                                              std::vector<User> users) {
   std::ofstream file;
   file.open("../src/Interface/info.txt", std::ios::trunc);
   for (auto& user : users) {
     file << user.username << '\n';
     file << user.password << '\n';
-    for (auto& line : user.client->GetInfo()) {
+    for (auto& line : user.client->get_info()) {
       file << line << '\n';
     }
     for (int bank_id = 1; bank_id <= 2; ++bank_id) {
-      auto data = banks_[bank_id].GetAccounts(user.client);
+      auto data = banks[bank_id].get_accounts(user.client);
       if (!data.empty()) {
         file << bank_id << '\n';
       }
@@ -66,193 +104,164 @@ void Interface::SaveInformation(std::vector<User> users) {
   file.close();
 }
 
-Client* Interface::CreateClient() {
-  Client* client = BuildClient();
+void Interface::user_register(Client*& client, std::vector<User>& users) {
+  print_message("Hello, welcome to account manager");
+  print_message("1.Sign in\n2.Sign up");
+  int option;
+  std::cin >> option;
+  while (option < 1 || option > 2) {
+    print_message("Incorrect option, try again");
+    std::cin >> option;
+  }
+  std::string user, password;
+  if (option == 1) {
+    print_message("Write user name then write password");
+    std::cin >> user >> password;
+    auto ans =
+        data_storage_.restore_information(banks_, user, password, "sign in");
+    while (ans.second == -1) {
+      print_message("Such user doesn't exist, try again");
+      std::cin >> user >> password;
+      ans =
+          data_storage_.restore_information(banks_, user, password, "sign in");
+    }
+    users = ans.first;
+    client = users[ans.second].client;
+  } else {
+    print_message("Create user name then create password");
+    std::cin >> user >> password;
+    users = data_storage_.restore_information(banks_, user, password, "sign up")
+                .first;
+    client = client->build_client();
+    users.push_back({user, password, client});
+  }
+}
+
+Client* Interface::create_client() {
+  Client* client;
+  client = client->build_client();
   return client;
 }
 
-void Interface::SetAdress(Client* client) {
-  PrintMessage("Write your adress");
+void Interface::set_adress(Client* client) {
+  print_message("Write your adress");
   std::string adress;
   std::cin >> adress;
-  client->SetAdress(adress);
+  client->set_adress(adress);
 }
 
-void Interface::SetPassport(Client* client) {
-  PrintMessage("Write your passport");
+void Interface::set_passport(Client* client) {
+  print_message("Write your passport");
   std::string passport;
   std::cin >> passport;
-  client->SetPassport(passport);
+  client->set_passport(passport);
 }
 
-Bank* Interface::CreateBank() {
-  PrintMessage("Choose bank: tinkoff or sberbank");
+Bank* Interface::create_bank() {
+  print_message("Choose bank:\n1.tinkoff\n2.sberbank");
   int num;
   std::cin >> num;
   while (num < 1 || num > 2) {
-    PrintMessage("Incorrect bank, try again");
+    print_message("Incorrect bank, try again");
     std::cin >> num;
   }
   return &banks_[num];
 }
 
-int Interface::CreateAccount(Client* client) {
-  Bank* bank = CreateBank();
-  PrintMessage("Choose account type: debet, deposit or credit");
+int Interface::create_account(Client* client) {
+  Bank* bank = create_bank();
+  print_message("Choose account type:\n1.debet\n2.deposit\n3.credit");
   int num;
   std::cin >> num;
   while (num < 1 || num > 3) {
-    PrintMessage("Incorrect account type, try again");
+    print_message("Incorrect account type, try again");
     std::cin >> num;
   }
   std::map<int, std::string> accounts = {
       {1, "Debet"}, {2, "Deposit"}, {3, "Credit"}};
   std::string type = accounts[num];
-  int id = bank->OpenAccount(client, type);
+  int id = bank->open_account(client, type);
   return id;
 }
 
-void Interface::CloseAccount(Client* client) {
-  Bank* bank = CreateBank();
-  PrintMessage("Write your account id");
+void Interface::close_account(Client* client) {
+  Bank* bank = create_bank();
+  print_message("Write your account id");
   int id;
   std::cin >> id;
-  bank->CloseAccount(id);
+  bank->close_account(id);
 }
 
-void Interface::Balance() {
-  Bank* bank = CreateBank();
-  PrintMessage("Write your account id");
+void Interface::balance() {
+  Bank* bank = create_bank();
+  print_message("Write your account id");
   int id;
   std::cin >> id;
-  int bal = bank->Balance(id);
+  int bal = bank->balance(id);
   std::cout << "Your balance is " << bal << "\n";
 }
 
-void Interface::Withdraw() {
-  Bank* bank = CreateBank();
-  PrintMessage("Write your account id");
+void Interface::withdraw() {
+  Bank* bank = create_bank();
+  print_message("Write your account id");
   int id;
   std::cin >> id;
-  PrintMessage("Write sum");
-  int sum;
-  std::cin >> sum;
-  bank->Withdraw(id, sum);
+  if (bank->exist(id)) {
+    print_message("Write sum");
+    int sum;
+    std::cin >> sum;
+    bank->withdraw(id, sum);
+  }
 }
 
-void Interface::Refill() {
-  Bank* bank = CreateBank();
-  PrintMessage("Write your account id");
+void Interface::refill() {
+  Bank* bank = create_bank();
+  print_message("Write your account id");
   int id;
   std::cin >> id;
-  PrintMessage("Write sum");
-  int sum;
-  std::cin >> sum;
-  bank->Refill(id, sum);
+  if (bank->exist(id)) {
+    print_message("Write sum");
+    int sum;
+    std::cin >> sum;
+    bank->refill(id, sum);
+  }
 }
 
-void Interface::Transaction() {
-  Bank* bank1 = CreateBank();
-  PrintMessage("Write sender account id");
+void Interface::transaction() {
+  Bank* bank1 = create_bank();
+  print_message("Write sender account id");
   int id1;
   std::cin >> id1;
-  Bank* bank2 = CreateBank();
-  PrintMessage("Write reciever account id");
+  if (!bank1->exist(id1)) {
+    return;
+  }
+  Bank* bank2 = create_bank();
+  print_message("Write reciever account id");
   int id2;
   std::cin >> id2;
-  PrintMessage("Write sum");
+  if (!bank2->exist(id2)) {
+    return;
+  }
+  print_message("Write sum");
   int sum;
   std::cin >> sum;
-  if (bank1->Exist(id1) && bank2->Exist(id2)) {
-    if (bank1->Withdraw(id1, sum) != 0) {
-      bank2->Refill(id2, sum);
-    }
+  if (bank1->withdraw(id1, sum) != 0) {
+    bank2->refill(id2, sum);
   }
 }
 
-void Interface::CancelLastOperation() {
-  Bank* bank = CreateBank();
-  PrintMessage("Write your account id");
+void Interface::cancel_last_operation() {
+  Bank* bank = create_bank();
+  print_message("Write your account id");
   int id;
   std::cin >> id;
-  bank->CancelLastOperation(id);
+  bank->cancel_last_operation(id);
 }
 
-void Interface::DecreasePeriod() {
-  Bank* bank = CreateBank();
-  PrintMessage("Write your account id");
+void Interface::decrease_period() {
+  Bank* bank = create_bank();
+  print_message("Write your account id");
   int id;
   std::cin >> id;
-  bank->DecreasePeriod(id);
-}
-
-void ConsoleInterface::PrintMessage(std::string message) {
-  std::cout << message << "\n";
-}
-
-void ConsoleInterface::main() {
-  PrintMessage("Hello, welcome to account manager");
-  PrintMessage("sign in or sign up");
-  Client* client;
-  std::vector<User> users;
-  int option;
-  std::cin >> option;
-  while (option < 1 || option > 2) {
-    PrintMessage("Incorrect option, try again");
-    std::cin >> option;
-  }
-  std::string user, password;
-  if (option == 1) {
-    PrintMessage("Write user name then write password");
-    std::cin >> user >> password;
-    auto ans = RestoreInformation(user, password);
-    while (ans.second == -1) {
-      PrintMessage("Incorrect data, try again");
-      std::cin >> user >> password;
-    }
-    users = ans.first;
-    client = users[ans.second].client;
-  } else {
-    PrintMessage("Create user name then create password");
-    std::cin >> user >> password;
-    users = RestoreInformation(user, password).first;
-    client = BuildClient();
-    users.push_back({user, password, client});
-  }
-  bool run = true;
-  while (run) {
-    PrintMessage("Choose an option");
-    PrintMessage(
-        "create bank account, show balance, withdraw, refill, transfer money, "
-        "cancel last operation, decrease period, set adress, set passport, "
-        "exit");
-    int option;
-    std::cin >> option;
-    while (option < 1 || option > 10) {
-      PrintMessage("Incorrect option, try again");
-      std::cin >> option;
-    }
-    if (option == 1) {
-      CreateAccount(client);
-    } else if (option == 2) {
-      Balance();
-    } else if (option == 3) {
-      Withdraw();
-    } else if (option == 4) {
-      Refill();
-    } else if (option == 5) {
-      Transaction();
-    } else if (option == 6) {
-      CancelLastOperation();
-    } else if (option == 7) {
-      DecreasePeriod();
-    } else if (option == 8) {
-      SetAdress(client);
-    } else if (option == 9) {
-      SetPassport(client);
-    } else if (option == 10) {
-      SaveInformation(users);
-      run = false;
-    }
-  }
+  bank->decrease_period(id);
 }

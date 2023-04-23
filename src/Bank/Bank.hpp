@@ -8,38 +8,40 @@
 
 class Bank {
   std::string name_;
-  int last_id = 1;
+  int last_id_ = 1;
   std::map<int, Account*> accounts_;
 
   // for credit account
-  const int limit_;
-  const int percentage_;
+  const int kLimit;
+  const int kPercentage;
 
  public:
   Bank();
 
   Bank(std::string name, int limit, int percentage);
 
-  std::vector<std::string> GetAccounts(Client* client);
+  std::vector<std::string> get_accounts(Client* client);
 
-  bool Exist(int id) const;
+  bool exist(int id) const;
 
-  int OpenAccount(Client* person, std::string type, int certain_id = -1,
-                  bool is_mute = true);
+  int open_account(Client* person, std::string type, int certain_id = -1,
+                   bool is_mute = false);
 
-  void CloseAccount(int id);
+  void close_account(int id);
 
-  int Balance(int id);
+  int balance(int id);
 
-  int Withdraw(int id, int sum);
+  int withdraw(int id, int sum);
 
-  void Refill(int id, int sum);
+  void refill(int id, int sum);
 
-  void Transaction(int id_sender, int id_receiver, int sum);
+  void transaction(int id_sender, int id_receiver, int sum);
 
-  void CancelLastOperation(int id);
+  void cancel_last_operation(int id);
 
-  void DecreasePeriod(int id);
+  void decrease_period(int id);
+
+  void set_period(int id, int period);
 
   ~Bank();
 };

@@ -13,45 +13,49 @@ class Account {
  public:
   Account() = default;
 
-  int Balance() const;
+  int balance() const;
 
-  Client* GetClient();
+  Client* get_client();
 
-  virtual std::string Type() = 0;
+  virtual std::string type() = 0;
 
-  virtual int Withdraw(int) = 0;  // return 0 if the operation was unsuccessful
+  virtual int withdraw(int) = 0;  // return 0 if the operation was unsuccessful
 
-  virtual void Refill(int) = 0;
+  virtual void refill(int) = 0;
 
-  void CancelLastOperation();
+  void cancel_last_operation();
 
   virtual ~Account() = default;
 };
 
 class DebetAccount : public Account {
  public:
-  std::string Type() override;
+  std::string type() override;
 
   DebetAccount(Client* person);
 
-  int Withdraw(int sum) override;
+  int withdraw(int sum) override;
 
-  void Refill(int sum) override;
+  void refill(int sum) override;
 };
 
 class DepositAccount : public Account {
   int period_;
 
  public:
-  std::string Type() override;
+  std::string type() override;
 
   DepositAccount(Client* person, int period);
 
-  void DecreasePeriod();
+  void decrease_period();
 
-  int Withdraw(int sum) override;
+  int get_period() const;
 
-  void Refill(int sum) override;
+  void set_period(int period);
+
+  int withdraw(int sum) override;
+
+  void refill(int sum) override;
 };
 
 class CreditAccount : public Account {
@@ -59,11 +63,11 @@ class CreditAccount : public Account {
   int percentage_;
 
  public:
-  std::string Type() override;
+  std::string type() override;
 
   CreditAccount(Client* person, int limit, int percentage);
 
-  int Withdraw(int sum) override;
+  int withdraw(int sum) override;
 
-  void Refill(int sum) override;
+  void refill(int sum) override;
 };

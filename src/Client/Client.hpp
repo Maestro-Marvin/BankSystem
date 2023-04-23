@@ -15,7 +15,9 @@ class Client {
   Client(const std::string& first_name, const std::string& second_name,
          const std::string& adress, const std::string& passport);
 
-  std::vector<std::string> GetInfo() {
+  static Client* build_client();
+
+  std::vector<std::string> get_info() {
     std::vector<std::string> ans;
     ans.push_back(firstName_);
     ans.push_back(secondName_);
@@ -24,15 +26,13 @@ class Client {
     return ans;
   }
 
-  std::string GetName() const;
+  std::string get_name() const;
 
-  void SetAdress(const std::string& adress);
+  void set_adress(const std::string& adress);
 
-  void SetPassport(const std::string& passport);
+  void set_passport(const std::string& passport);
 
-  bool IsReliable() const;
+  bool is_reliable() const;
 
   ~Client() {}
 };
-
-Client* BuildClient();

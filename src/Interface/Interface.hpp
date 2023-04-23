@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -17,48 +18,67 @@ struct User {
 
 class Interface {
  protected:
-  std::pair<std::vector<User>, int> RestoreInformation(std::string user,
-                                                       std::string password);
-
-  void SaveInformation(std::vector<User> users);
-
- public:
-  Interface() = default;
-
-  virtual void PrintMessage(std::string message) = 0;
-
-  Client* CreateClient();
-
-  void SetAdress(Client* client);
-
-  void SetPassport(Client* client);
-
   std::map<int, Bank> banks_ = {{1, Bank("tinkfoff", 10000, 10)},
                                 {2, Bank("sberbank", 15000, 15)}};
 
-  Bank* CreateBank();
+  Client* create_client();
 
-  int CreateAccount(Client* client);
+  void set_adress(Client* client);
 
-  void CloseAccount(Client* client);
+  void set_passport(Client* client);
 
-  void Balance();
+  Bank* create_bank();
 
-  void Withdraw();
+  int create_account(Client* client);
 
-  void Refill();
+  void close_account(Client* client);
 
-  void Transaction();
+  void balance();
 
-  void CancelLastOperation();
+  void withdraw();
 
-  void DecreasePeriod();
+  void refill();
+
+  void transaction();
+
+  void cancel_last_operation();
+
+  void decrease_period();
+
+  void user_register(Client*& client, std::vector<User>& users);
+
+  class DataStorage {
+   public:
+    DataStorage() = default;
+
+    bool find_user(std::string user, std::string password);
+
+    Client* restore_client(std::ifstream& file);
+
+    void restore_accounts(std::ifstream& file, std::map<int, Bank>& banks,
+                          Client* client);
+
+    std::pair<std::vector<User>, int> restore_information(
+        std::map<int, Bank>& banks, std::string user, std::string password,
+        std::string mode);
+    void save_information(std::map<int, Bank>& banks, std::vector<User> users);
+  };
+
+  virtual void print_message(std::string message) = 0;
+
+  DataStorage data_storage_;
+
+ public:
+  Interface() = default;
 
   virtual void main() = 0;
 };
 
 class ConsoleInterface : public Interface {
-  void PrintMessage(std::string message) override;
+  void print_message(std::string message) override;
+
+ public:
+  ConsoleInterface() { data_storage_ = DataStorage(); }
 
   void main() override;
 };
