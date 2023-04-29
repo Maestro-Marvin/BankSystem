@@ -1,17 +1,19 @@
 #include "Bank.hpp"
 
-std::vector<std::string> Bank::get_accounts(Client* client) {
+std::vector<std::string> Bank::get_accounts_belong_to(Client* const& client,
+                                                      int passed_period) {
   std::vector<std::string> ans;
   for (auto pair : accounts_) {
     int id = pair.first;
     Account* account = pair.second;
-    if (account->get_client() == client) {
+    if (account->is_belong(client)) {
       ans.push_back(std::to_string(id));
       ans.push_back(account->type());
       ans.push_back(std::to_string(balance(id)));
       if (account->type() == "Deposit") {
-        ans.push_back(std::to_string(
-            static_cast<DepositAccount*>(account)->get_period()));
+        int period = static_cast<DepositAccount*>(account)->get_period();
+        period = std::max(0, period - passed_period);
+        ans.push_back(std::to_string(period));
       }
     }
   }
@@ -20,10 +22,13 @@ std::vector<std::string> Bank::get_accounts(Client* client) {
 
 bool Bank::exist(int id) const {
   if (accounts_.find(id) == accounts_.end()) {
-    std::cerr << "There isn't this account\n";
     return false;
   }
   return true;
+}
+
+bool Bank::is_belong(int id, Client* const& person) {
+  return accounts_[id]->is_belong(person);
 }
 
 Bank::Bank() : kLimit(0), kPercentage(0) {}
@@ -31,7 +36,7 @@ Bank::Bank() : kLimit(0), kPercentage(0) {}
 Bank::Bank(std::string name, int limit, int percentage)
     : name_(name), kLimit(limit), kPercentage(percentage) {}
 
-int Bank::open_account(Client* person, std::string type, int certain_id,
+int Bank::open_account(Client*& person, std::string type, int certain_id,
                        bool is_mute) {
   if (accounts_.find(certain_id) != accounts_.end()) {
     return certain_id;
@@ -78,17 +83,20 @@ void Bank::close_account(int id) {
   }
 }
 
-int Bank::balance(int id) {
-  if (exist(id)) {
-    return accounts_[id]->balance();
+void Bank::clear_information() {
+  std::vector<int> ids;
+  for (auto& pair : accounts_) {
+    int id = pair.first;
+    ids.push_back(id);
+  }
+  for (int id : ids) {
+    close_account(id);
   }
 }
 
-int Bank::withdraw(int id, int sum) {
-  if (exist(id)) {
-    return accounts_[id]->withdraw(sum);
-  }
-}
+int Bank::balance(int id) { return accounts_[id]->balance(); }
+
+int Bank::withdraw(int id, int sum) { return accounts_[id]->withdraw(sum); }
 
 void Bank::refill(int id, int sum) {
   if (exist(id)) {
@@ -105,26 +113,20 @@ void Bank::transaction(int id_sender, int id_receiver, int sum) {
 }
 
 void Bank::cancel_last_operation(int id) {
-  if (exist(id)) {
-    accounts_[id]->cancel_last_operation();
-  }
-}
-
-void Bank::decrease_period(int id) {
-  if (accounts_[id]->type() != "Deposit") {
-    std::cerr << "It isn't a deposit account";
-  } else {
-    static_cast<DepositAccount*>(accounts_[id])->decrease_period();
-  }
+  accounts_[id]->cancel_last_operation();
 }
 
 void Bank::set_period(int id, int period) {
-  if (accounts_[id]->type() != "Deposit") {
-    std::cerr << "It isn't a deposit account";
-  } else {
+  if (accounts_[id]->type() == "Deposit") {
     static_cast<DepositAccount*>(accounts_[id])->set_period(period);
   }
 }
+
+int Bank::get_period(int id) {
+  return static_cast<DepositAccount*>(accounts_[id])->get_period();
+}
+
+std::string Bank::get_type(int id) { return accounts_[id]->type(); }
 
 Bank::~Bank() {
   for (auto pair : accounts_) {

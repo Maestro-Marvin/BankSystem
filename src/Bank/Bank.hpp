@@ -20,14 +20,19 @@ class Bank {
 
   Bank(std::string name, int limit, int percentage);
 
-  std::vector<std::string> get_accounts(Client* client);
+  std::vector<std::string> get_accounts_belong_to(Client* const& client,
+                                                  int passed_period);
 
   bool exist(int id) const;
 
-  int open_account(Client* person, std::string type, int certain_id = -1,
+  bool is_belong(int id, Client* const& person);
+
+  int open_account(Client*& person, std::string type, int certain_id = -1,
                    bool is_mute = false);
 
   void close_account(int id);
+
+  void clear_information();
 
   int balance(int id);
 
@@ -39,9 +44,11 @@ class Bank {
 
   void cancel_last_operation(int id);
 
-  void decrease_period(int id);
-
   void set_period(int id, int period);
+
+  int get_period(int id);
+
+  std::string get_type(int id);
 
   ~Bank();
 };

@@ -15,7 +15,7 @@ class Account {
 
   int balance() const;
 
-  Client* get_client();
+  bool is_belong(Client* const& person) const;
 
   virtual std::string type() = 0;
 
@@ -47,11 +47,11 @@ class DepositAccount : public Account {
 
   DepositAccount(Client* person, int period);
 
-  void decrease_period();
-
-  int get_period() const;
+  void decrease_period(int period);
 
   void set_period(int period);
+
+  int get_period() const;
 
   int withdraw(int sum) override;
 
