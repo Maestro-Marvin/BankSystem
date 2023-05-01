@@ -48,7 +48,7 @@ int Bank::open_account(Client*& person, std::string type, int certain_id,
     int period;
     if (!is_mute) {
       std::cout << person->get_name() << ", ";
-      std::cout << "specify the period ";
+      std::cout << "specify the deposit period in days";
       std::cin >> period;
     }
     account = new DepositAccount(person, period);
