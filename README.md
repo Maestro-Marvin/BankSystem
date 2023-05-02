@@ -34,13 +34,11 @@ Cчет, с ĸоторого нельзя снимать и переводить
     git clone https://gitlab.akhcheck.ru/artemii.nikitin/banksystem.git
     cd banksystem
 
-Затем соберите проект с помощью cmake и запустите его, увидите результат выполнения тестов
+Затем соберите проект с помощью docker и запустите его
 
-    mkdir build
-    cd build
-    cmake ../src
-    cmake --build .
-    ./BankSystem
+    docker build -t banksystem-image .
+    docker run -it banksystem-image
+
 
 
 
