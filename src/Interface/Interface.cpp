@@ -32,11 +32,13 @@ Client* Interface::DataStorage::restore_client(std::ifstream& file) {
   std::getline(file, first_name);
   std::string second_name;
   std::getline(file, second_name);
+  std::string phone;
+  std::getline(file, phone);
   std::string adress;
   std::getline(file, adress);
   std::string passport;
   std::getline(file, passport);
-  return new Client(first_name, second_name, adress, passport);
+  return new Client(first_name, second_name, phone, adress, passport);
 }
 
 void Interface::DataStorage::restore_accounts(std::ifstream& file,
@@ -191,6 +193,13 @@ Client* Interface::create_client() {
   return client;
 }
 
+void Interface::set_phone(Client*& client) {
+  print_message("Write your phone");
+  std::string phone;
+  std::cin >> phone;
+  client->set_phone(phone);
+}
+
 void Interface::set_adress(Client*& client) {
   print_message("Write your adress");
   std::string adress;
@@ -203,6 +212,29 @@ void Interface::set_passport(Client*& client) {
   std::string passport;
   std::cin >> passport;
   client->set_passport(passport);
+}
+
+int Interface::get_account_id(Bank*& bank){
+  print_message("Want to identify account by:\n1.account id\n2.phone number");
+  int option;
+  std::cin >> option;
+  print_message("");
+  while (option < 1 || option > 2) {
+    print_message("Incorrect option, try again");
+    std::cin >> option;
+  }
+  if (option == 1){
+    print_message("Write your account id");
+    int id;
+    std::cin >> id;
+    print_message("");
+    return id;
+  }
+  print_message("Write your phone number");
+  std::string phone;
+  std::cin >> phone;
+  print_message("");
+  return bank->get_account_id_by_phone(phone);
 }
 
 Bank* Interface::create_bank() {
@@ -249,10 +281,7 @@ void Interface::close_account(Client* const& person) {
 
 void Interface::balance(Client* const& person) {
   Bank* bank = create_bank();
-  print_message("Write your account id");
-  int id;
-  std::cin >> id;
-  print_message("");
+  int id = get_account_id(bank);
   if (!bank->exist(id)) {
     print_message("There isn't such account");
     return;
@@ -287,10 +316,7 @@ bool Interface::compare_period(Bank*& bank, int id) {
 
 void Interface::withdraw(Client* const& person) {
   Bank* bank = create_bank();
-  print_message("Write your account id");
-  int id;
-  std::cin >> id;
-  print_message("");
+  int id = get_account_id(bank);
   if (!bank->exist(id)) {
     print_message("There isn't such account");
     return;
@@ -311,10 +337,7 @@ void Interface::withdraw(Client* const& person) {
 
 void Interface::refill(Client* const& person) {
   Bank* bank = create_bank();
-  print_message("Write your account id");
-  int id;
-  std::cin >> id;
-  print_message("");
+  int id = get_account_id(bank);
   if (!bank->exist(id)) {
     print_message("There isn't such account");
     return;
@@ -330,10 +353,9 @@ void Interface::refill(Client* const& person) {
 }
 
 void Interface::transaction(Client* const& sender) {
+  print_message("Sender:");
   Bank* bank1 = create_bank();
-  print_message("Write sender account id");
-  int id1;
-  std::cin >> id1;
+  int id1 = get_account_id(bank1);
   print_message("");
   if (!bank1->exist(id1)) {
     print_message("There isn't such account");
@@ -347,10 +369,9 @@ void Interface::transaction(Client* const& sender) {
     print_message("Deposit period isn't over");
     return;
   }
+  print_message("Reciever:");
   Bank* bank2 = create_bank();
-  print_message("Write reciever account id");
-  int id2;
-  std::cin >> id2;
+  int id2 = get_account_id(bank2);
   print_message("");
   if (!bank2->exist(id2)) {
     print_message("There isn't such account");

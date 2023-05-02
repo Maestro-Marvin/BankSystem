@@ -29,9 +29,13 @@ class Interface {
 
   void clear_information();
 
+  void set_phone(Client*& client);
+
   void set_adress(Client*& client);
 
   void set_passport(Client*& client);
+
+  int get_account_id(Bank*& bank);
 
   Bank* create_bank();
 

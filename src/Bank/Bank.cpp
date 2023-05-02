@@ -48,7 +48,7 @@ int Bank::open_account(Client*& person, std::string type, int certain_id,
     int period;
     if (!is_mute) {
       std::cout << person->get_name() << ", ";
-      std::cout << "specify the deposit period in days";
+      std::cout << "specify the deposit period in days ";
       std::cin >> period;
     }
     account = new DepositAccount(person, period);
@@ -102,6 +102,17 @@ void Bank::refill(int id, int sum) {
   if (exist(id)) {
     accounts_[id]->refill(sum);
   }
+}
+
+int Bank::get_account_id_by_phone(const std::string& phone){
+  for (auto& pair : accounts_) {
+    int id = pair.first;
+    Account* account = pair.second;
+    if (account->is_same_phone(phone)){
+      return id;
+    }
+  }
+  return -1;
 }
 
 void Bank::transaction(int id_sender, int id_receiver, int sum) {

@@ -40,6 +40,8 @@ class Bank {
 
   void refill(int id, int sum);
 
+  int get_account_id_by_phone(const std::string& phone);
+
   void transaction(int id_sender, int id_receiver, int sum);
 
   void cancel_last_operation(int id);

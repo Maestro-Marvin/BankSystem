@@ -17,6 +17,8 @@ class Account {
 
   bool is_belong(Client* const& person) const;
 
+  bool is_same_phone(const std::string& phone) const;
+
   virtual std::string type() = 0;
 
   virtual int withdraw(int) = 0;  // return 0 if the operation was unsuccessful

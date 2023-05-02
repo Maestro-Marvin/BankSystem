@@ -18,9 +18,9 @@ void ConsoleInterface::main() {
       print_message(
           "1.Create bank account\n2.Show "
           "balance\n3.Withdraw\n4.Refill\n5.Transfer money\n"
-          "6.Cancel last operation\n7.Set adress\n8.Set "
-          "passport\n9.List of accounts\n10.Logout\n"
-          "11.Exit");
+          "6.Cancel last operation\n7.Set phone\n8.Set adress\n9.Set "
+          "passport\n10.List of accounts\n11.Logout\n"
+          "12.Exit");
       int option;
       std::cin >> option;
       print_message("");
@@ -44,20 +44,23 @@ void ConsoleInterface::main() {
           cancel_last_operation(client);
           break;
         case 7:
-          set_adress(client);
+          set_phone(client);
           break;
         case 8:
-          set_passport(client);
+          set_adress(client);
           break;
         case 9:
-          list_of_accounts(client);
+          set_passport(client);
           break;
         case 10:
+          list_of_accounts(client);
+          break;
+        case 11:
           data_storage_.save_information(banks_, users, timer_);
           clear_information();
           run = false;
           break;
-        case 11:
+        case 12:
           data_storage_.save_information(banks_, users, timer_);
           run = false;
           session = false;
